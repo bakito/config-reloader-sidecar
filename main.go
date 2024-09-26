@@ -8,45 +8,56 @@ import (
 	"syscall"
 
 	"github.com/fsnotify/fsnotify"
-	"github.com/mitchellh/go-ps"
+	ps "github.com/shirou/gopsutil/v4/process"
 	"golang.org/x/sys/unix"
 )
 
+const (
+	envConfigDir    = "CONFIG_DIR"
+	envProcessName  = "PROCESS_NAME"
+	envVerbose      = "VERBOSE"
+	envReloadSignal = "RELOAD_SIGNAL"
+)
+
 func main() {
-	configDir := os.Getenv("CONFIG_DIR")
+	configDir := os.Getenv(envConfigDir)
 	if configDir == "" {
-		log.Fatal("mandatory env var CONFIG_DIR is empty, exiting")
+		log.Fatalf("mandatory env var %q is empty, exiting", envConfigDir)
 	}
 
-	processName := os.Getenv("PROCESS_NAME")
+	processName := os.Getenv(envProcessName)
 	if processName == "" {
-		log.Fatal("mandatory env var PROCESS_NAME is empty, exiting")
+		log.Fatalf("mandatory env var %q is empty, exiting", envProcessName)
 	}
 
 	verbose := false
-	verboseFlag := os.Getenv("VERBOSE")
+	verboseFlag := os.Getenv(envVerbose)
 	if verboseFlag == "true" {
 		verbose = true
 	}
 
 	var reloadSignal syscall.Signal
-	reloadSignalStr := os.Getenv("RELOAD_SIGNAL")
+	reloadSignalStr := os.Getenv(envReloadSignal)
 	if reloadSignalStr == "" {
-		log.Printf("RELOAD_SIGNAL is empty, defaulting to SIGHUP")
+		log.Printf("%q is empty, defaulting to SIGHUP", envReloadSignal)
 		reloadSignal = syscall.SIGHUP
 	} else {
 		reloadSignal = unix.SignalNum(reloadSignalStr)
 		if reloadSignal == 0 {
-			log.Fatalf("cannot find signal for RELOAD_SIGNAL: %s", reloadSignalStr)
+			log.Fatalf("cannot find signal for %q: %s", envReloadSignal, reloadSignalStr)
 		}
 	}
 
-	log.Printf("starting with CONFIG_DIR=%s, PROCESS_NAME=%s, RELOAD_SIGNAL=%s\n", configDir, processName, reloadSignal)
+	log.Printf("starting with %s=%s, %s=%s, %s=%s\n",
+		envConfigDir, configDir,
+		envProcessName, processName,
+		envReloadSignal, reloadSignal,
+	)
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer watcher.Close()
+	defer func() { _ = watcher.Close() }()
 
 	done := make(chan bool)
 	go func() {
@@ -89,13 +100,14 @@ func main() {
 func findPID(process string) (int, error) {
 	processes, err := ps.Processes()
 	if err != nil {
-		return -1, fmt.Errorf("failed to list processes: %v\n", err)
+		return -1, fmt.Errorf("failed to list processes: %w\n", err)
 	}
 
 	for _, p := range processes {
-		if p.Executable() == process {
-			log.Printf("found executable %s (pid: %d)\n", p.Executable(), p.Pid())
-			return p.Pid(), nil
+		name, err := p.Name()
+		if err == nil && name == process {
+			log.Printf("found executable %s (pid: %d)\n", name, p.Pid)
+			return int(p.Pid), nil
 		}
 	}
 
@@ -110,7 +122,7 @@ func reloadProcess(process string, signal syscall.Signal) error {
 
 	err = syscall.Kill(pid, signal)
 	if err != nil {
-		return fmt.Errorf("could not send signal: %v\n", err)
+		return fmt.Errorf("could not send signal: %w\n", err)
 	}
 
 	log.Printf("signal %s sent to %s (pid: %d)\n", signal, process, pid)
