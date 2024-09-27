@@ -51,7 +51,7 @@ func main() {
 	log.Printf("starting with %s=%s, %s=%s, %s=%s\n",
 		envConfigDir, configDir,
 		envProcessName, processName,
-		envReloadSignal, reloadSignal,
+		envReloadSignal, unix.SignalName(reloadSignal),
 	)
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
