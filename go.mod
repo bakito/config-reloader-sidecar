@@ -5,7 +5,7 @@ go 1.23
 require (
 	github.com/fsnotify/fsnotify v1.7.0
 	github.com/shirou/gopsutil/v4 v4.24.9
-	golang.org/x/sys v0.25.0
+	golang.org/x/sys v0.26.0
 )
 
 require (
