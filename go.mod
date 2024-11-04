@@ -4,12 +4,12 @@ go 1.23
 
 require (
 	github.com/fsnotify/fsnotify v1.7.0
-	github.com/shirou/gopsutil/v4 v4.24.9
+	github.com/shirou/gopsutil/v4 v4.24.10
 	golang.org/x/sys v0.26.0
 )
 
 require (
-	github.com/ebitengine/purego v0.8.0 // indirect
+	github.com/ebitengine/purego v0.8.1 // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect
 	github.com/lufia/plan9stats v0.0.0-20240909124753-873cd0166683 // indirect
 	github.com/power-devops/perfstat v0.0.0-20240221224432-82ca36839d55 // indirect
