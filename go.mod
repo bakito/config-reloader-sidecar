@@ -3,7 +3,7 @@ module github.com/pluies/config-reloader-sidecar/v2
 go 1.23
 
 require (
-	github.com/fsnotify/fsnotify v1.7.0
+	github.com/fsnotify/fsnotify v1.8.0
 	github.com/shirou/gopsutil/v4 v4.24.10
 	golang.org/x/sys v0.26.0
 )
