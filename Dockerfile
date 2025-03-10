@@ -1,6 +1,6 @@
-FROM golang:1.23-bullseye AS builder
+FROM golang:1.24-alpine AS builder
 
-RUN apt-get update && apt-get install -y upx
+RUN apk update && apk add upx
 
 WORKDIR /workspace
 
